@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Chart</title>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div>
+	<a href="index.html">Go back</a>
+  <canvas id="myChart"></canvas>
+</div>
+
+<script type="text/javascript">
+
+	const ytemps_middle = localStorage.getItem('middle');
+	const array = JSON.parse(ytemps_middle);
+	const labels = Array(array.length).fill().map((element, index) => index + 0)
+
+	const ytemps_end = localStorage.getItem('end');
+	const array_end = JSON.parse(ytemps_end);
+
+	const boundaryType = JSON.parse(localStorage.getItem('boundaryType'));
+	// const labels = [1, 2, 3, 4, 5, 6, 7];
+	const data = {
+	  	labels: labels,
+	  	datasets: [{
+	    label: 'Temperature in middle',
+	    data: array,
+	    fill: false,
+	    borderColor: 'rgb(75, 192, 192)',
+	    tension: 0.1
+	  	}, 
+	  	{
+	  		label: 'Temperature at the corner',
+	  		data: array_end,
+	  		fill:false,
+	  		borderColor: 'rgb(140, 45, 120)',
+	  		tension: 0.1
+	  	}
+	  	]
+	};
+	const config = {
+  	type: 'line',
+ 	 data: data,
+ 	 options:{
+ 	 	plugins:{
+ 	 		title:{
+ 	 			display:true,
+ 	 			text:`Temperature in different regions of the metal bar for ${boundaryType} boundary condition`,
+ 	 		}
+ 	 	},
+ 	 }
+	};
+
+
+  var myChart = new Chart(
+    document.getElementById('myChart'),
+    config
+  );
+</script>
+</body>
+</html>

@@ -12,7 +12,10 @@ let methodButton;
 let resetBtn;
 let tempTxt;
 let reflecting, absorbing, periodic;
-
+let boundaryType;
+var middle = [];
+let chartLink;
+var end = [];
 
 capturer = new CCapture({
     format: "webm",
@@ -30,6 +33,7 @@ k = 0.03 //diffusion rate or thermal diffusivity
 
 function setAbsorbingBoundary(grid, next, boundaryTemp){
 
+	boundaryType = 'absorbing';
 	for(var x = 0; x<cols; x++)
 	{
 		if(x==0 || x == cols - 1)
@@ -60,6 +64,7 @@ function setAbsorbingBoundary(grid, next, boundaryTemp){
 
 function setPeriodicBoundary(grid, next){
 
+	boundaryType = 'periodic';
 	for(var y = 1; y<rows - 1; y++){
 		//setting the left most boundary
 		grid[0][y] = new Cell(0, y*h, w, h, grid[cols - 2][y].getValue());
@@ -96,6 +101,7 @@ function setPeriodicBoundary(grid, next){
 
 function setReflectingBoundary(grid, next){
 
+	boundaryType = 'reflecting';
 	for(var x = 1; x < cols - 1; x++)
 	{
 		//setting the topmost row
@@ -165,6 +171,7 @@ function changeMethod(){
 
 function start(){
 
+	localStorage.clear();
 	grid = [];
 	next = [];
 	cols = floor(width/w);
@@ -254,7 +261,7 @@ function setup(){
 	//creating download text to notify the user
 	downloadText = document.createElement('p');
 	downloadText.style = 'font-weight: bold; margin-left: 19%; margin-top:35px';
-	downloadText.textContent = "Note: A movie will be downloaded after 300 frames have passed by. You will be able to open the movie in Google Chrome browser."
+	downloadText.textContent = "Note: A movie will be downloaded after 300 frames have passed by and chart will be generated. You will be able to open the movie in Google Chrome browser."
 	document.body.appendChild(downloadText);
 
 
@@ -272,6 +279,8 @@ function draw(){
 
 	if(frameCount !== 1 && isNewton)
 	{
+			middle.push((1 - next[cols/2][rows/2].getValue())*50);
+			end.push((1 - next[1][1].getValue())*50);
 			//applying constant hot zone
 			next[1][8].value = 0;
 			next[1][9].value = 0;
@@ -305,6 +314,8 @@ function draw(){
 
 	else if(frameCount !== 1 && !isNewton)
 	{
+			middle.push((1 - next[cols/2][rows/2].getValue())*50);
+			end.push((1 - next[1][1].getValue())*50);
 			//applying constant heat
 			next[1][8].value = 0;
 			next[1][9].value = 0;
@@ -351,6 +362,15 @@ function draw(){
 		noLoop();
 		btn.textContent="Start Animation";
 		capturer.stop();
+		localStorage.setItem("middle", JSON.stringify(middle));
+		localStorage.setItem("end", JSON.stringify(end));
+		localStorage.setItem('boundaryType', JSON.stringify(boundaryType));
+
+		chartLink = document.createElement('a');
+		chartLink.href = 'chart.html';
+		chartLink.innerText = 'Checkout chart';
+		chartLink.style='margin-left:26%; '
+		document.body.appendChild(chartLink);
 		// capturer.save();
 	}
 	if(frameCount> 300){
