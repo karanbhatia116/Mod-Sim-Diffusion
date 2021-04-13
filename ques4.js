@@ -462,7 +462,7 @@ function draw(){
 		chartLink.innerText = 'Checkout chart';
 		chartLink.style='margin-left:26%; '
 		document.body.appendChild(chartLink);
-		// capturer.save();
+		capturer.save();
 	}
 	else if(printed){
 		noLoop();
@@ -478,7 +478,7 @@ function draw(){
 		chartLink.innerText = 'Checkout chart';
 		chartLink.style='margin-left:26%; '
 		document.body.appendChild(chartLink);
-		// capturer.save();
+		capturer.save();
 	}
 }
 
