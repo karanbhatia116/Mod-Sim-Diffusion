@@ -20,7 +20,7 @@ var end = [];
 var isGreaterThan001 = false;
 var printed = false;
 var x, y;
-
+var sum = 0;
 capturer = new CCapture({
     format: "webm",
     framerate: 100,
@@ -32,7 +32,7 @@ boundaryTemp = 0.5 // (1-boundaryTemp)*50 gives the actual value of temp
 intermediateTemp = 0.4 // (1 - intermediateTemp)*50 gives actual value
 w = 20; //width of each cell
 h = 20; //height of each cell
-k = 0.03 //diffusion rate or thermal diffusivity
+k = 0.08 //diffusion rate or thermal diffusivity
 
 
 function setAbsorbingBoundary(grid, next, boundaryTemp){
@@ -192,9 +192,9 @@ function start(){
 	}
 
 	//setting all the other cells at ambient temperature except few defined to be hot and cold zones
-	for(var x = 1; x<cols - 1;x++)
+	for(var x = 0; x<cols ;x++)
 	{
-		for(var y = 1; y < rows - 1; y++)
+		for(var y = 0; y < rows; y++)
 		{
 			grid[x][y] = new Cell(x*w, y*h, w, h, intermediateTemp);
 			next[x][y] = new Cell(x*w, y*h, w, h, intermediateTemp);
@@ -202,32 +202,25 @@ function start(){
 	}
 
 	//defining hot zones
+	grid[1][6].value = 0;
+	grid[1][7].value = 0;
 	grid[1][8].value = 0;
-	grid[1][9].value = 0;
-	grid[1][10].value = 0;
-	grid[1][11].value = 0;
-	grid[20][1].value = 0;
-	grid[21][1].value = 0;
-	grid[22][1].value = 0;
+	grid[7][1].value = 0;
+	grid[8][1].value = 0;
 
 
+	next[1][6].value = 0;
+	next[1][7].value = 0;
 	next[1][8].value = 0;
-	next[1][9].value = 0;
-	next[1][10].value = 0;
-	next[1][11].value = 0;
-	next[20][1].value = 0;
-	next[21][1].value = 0;
-	next[22][1].value = 0;
-
+	next[7][1].value = 0;
+	next[8][1].value = 0;
 
 	//defining cold zones
-	grid[10][rows-2].value = 1;
-	grid[11][rows-2].value = 1;
-	grid[12][rows-2].value = 1;
+	grid[8][rows - 2].value = 1;
+	grid[9][rows - 2].value = 1;
 
-	next[10][rows-2].value = 1;
-	next[11][rows-2].value = 1;
-	next[12][rows-2].value = 1;
+	next[8][rows - 2].value = 1;
+	next[9][rows - 2].value = 1;
 
 }
 // Main function
@@ -274,7 +267,7 @@ function setup(){
 		noLoop();
 
 	});
-	//defining boundary
+	// defining boundary
 	grid, next = setAbsorbingBoundary(grid, next, boundaryTemp);
 
 	//setting the frame rate
@@ -288,11 +281,11 @@ function setup(){
 	btn.onclick = animate;
 
 	//creating a button to change method
-	methodButton = document.createElement("button");
-	methodButton.style = "margin-top: 12px; margin-left: 10px; padding: 10px";
-	methodButton.textContent = "Newton's law";
-	document.body.appendChild(methodButton);
-	methodButton.onclick = changeMethod;
+	// methodButton = document.createElement("button");
+	// methodButton.style = "margin-top: 12px; margin-left: 10px; padding: 10px";
+	// methodButton.textContent = "Newton's law";
+	// document.body.appendChild(methodButton);
+	// methodButton.onclick = changeMethod;
 
 	//creating a reset button for animation
 	var r = createButton("Reset Animation");
@@ -317,34 +310,38 @@ function resetSketch(){
 
 
 function draw(){
+	isGreaterThan001 = false;
 	if(frameCount === 1) capturer.start();
 	background(51);
 
 	if(frameCount !== 1 && isNewton)
 	{
 
+			middle.push((1 - next[floor(cols/2)][floor(rows/2)].getValue())*50);
+			end.push((1 - next[1][1].getValue())*50);
 			if(frameCount>2)
 			{
 					for(x = 1; x < cols - 1; x++){
-					for(y = 1; y < rows - 1; y++){
-						if(abs (next[x][y].getValue() - grid[x][y].getValue()) > 0.1009){
-							isGreaterThan001 = true;
-							break;
+						for(y = 1; y < rows - 1; y++){
+							if(abs((1 - next[x][y].getValue())*50 - (1 - grid[x][y].getValue())*50)> 0.001){
+								isGreaterThan001 = true;
+								break;
+							}
 						}
-					}
 					if(isGreaterThan001)
-					break;
+						break;
 					}
 
 				if(!isGreaterThan001 && !printed){
-					console.log(`Reached equilibrium at ${frameCount}`);
+					for(x = 0; x < cols ; x++){
+						for(y = 0; y < rows; y++){
+							sum += next[x][y].value;
+						}
+					}
+					alert(`Reached equilibrium at time step ${frameCount} and average temperature is ${(1 - sum/(rows*cols))*50}`);
 					printed = true;
 				}
 			}
-
-
-			middle.push((1 - next[cols/2][rows/2].getValue())*50);
-			end.push((1 - next[1][1].getValue())*50);
 
 			for(x = 0; x < cols ; x++){
 				for(y = 0; y < rows; y++){
@@ -352,22 +349,26 @@ function draw(){
 				}
 			}
 
-			if(frameCount<10)
-			{
-				//applying constant hot zone
-				next[1][8].value = 0;
-				next[1][9].value = 0;
-				next[1][10].value = 0;
-				next[1][11].value = 0;
-				next[20][1].value = 0;
-				next[21][1].value = 0;
-				next[22][1].value = 0;
+				// //defining hot zones
+				// grid[1][6].value = 0;
+				// grid[1][7].value = 0;
+				// grid[1][8].value = 0;
+				// grid[7][1].value = 0;
+				// grid[8][1].value = 0;
 
-				//applying constant cold zone
-				next[10][rows-2].value = 1;
-				next[11][rows-2].value = 1;
-				next[12][rows-2].value = 1;
-			}
+
+				// next[1][6].value = 0;
+				// next[1][7].value = 0;
+				// next[1][8].value = 0;
+				// next[7][1].value = 0;
+				// next[8][1].value = 0;
+
+				// //defining cold zones
+				// grid[8][rows - 2].value = 1;
+				// grid[9][rows - 2].value = 1;
+
+				// next[8][rows - 2].value = 1;
+				// next[9][rows - 2].value = 1;
 
 
 		for(var x = 1; x<cols - 1;x++)
@@ -382,34 +383,10 @@ function draw(){
 				SE = next[x + 1][y + 1].getValue();
 				SW = next[x - 1][y + 1].getValue();
 				value = next[x][y].getValue();
-				next[x][y].setValue(calculateNewValueNewtonsLaw(k,value, N, S, E, W, NE, NW, SE, SW));
+				next[x][y].setValue(calculateNewValueNewtonsLaw(k,value, N, S, E, W, NE, NW, SE, SW, x, y, frameCount));
 			}
 		}
 	}	
-
-	else if(frameCount !== 1 && !isNewton)
-	{
-			middle.push((1 - next[cols/2][rows/2].getValue())*50);
-			end.push((1 - next[1][1].getValue())*50);
-
-		prev = next[cols/2][rows/2].getValue();
-		for(var x = 1; x<cols - 1;x++)
-		{
-			for(var y = 1; y < rows - 1; y++){
-				N = next[x][y - 1].getValue();
-				S = next[x][y + 1].getValue();
-				W = next[x-1][y].getValue();
-				E = next[x+1][y].getValue();
-				NE = next[x + 1][y - 1].getValue();
-				NW = next[x - 1][y - 1].getValue();
-				SE = next[x + 1][y + 1].getValue();
-				SW = next[x - 1][y + 1].getValue();
-				value = next[x][y].getValue();
-				next[x][y].setValue(calculateNewValueUsingFilter(value, N, S, E, W, NE, NW, SE, SW, x, y));
-			}
-		}
-	}	
-
 
 	for(var x = 0;x<cols;x++)
 	{
@@ -423,8 +400,8 @@ function draw(){
 	}
 
 
-	if(frameCount=== 300){
-		// noLoop();
+	if(frameCount=== 300 && printed){
+		noLoop();
 		btn.textContent="Start Animation";
 		capturer.stop();
 		localStorage.setItem("middle", JSON.stringify(middle));
@@ -439,14 +416,38 @@ function draw(){
 		document.body.appendChild(chartLink);
 		// capturer.save();
 	}
-	// if(frameCount> 300){
-	// 	resetSketch();
-	// }
+	else if(printed){
+		noLoop();
+		btn.textContent="Start Animation";
+		capturer.stop();
+		localStorage.setItem("middle", JSON.stringify(middle));
+		localStorage.setItem("end", JSON.stringify(end));
+		localStorage.setItem('boundaryType', JSON.stringify(boundaryType));
+
+		alert('Chart is generated. Click the link at the bottom or wait till equilibrium.');
+		chartLink = document.createElement('a');
+		chartLink.href = 'chart.html';
+		chartLink.innerText = 'Checkout chart';
+		chartLink.style='margin-left:26%; '
+		document.body.appendChild(chartLink);
+		// capturer.save();
+	}
 }
 
 
-function calculateNewValueNewtonsLaw(k, value, N, S, E, W, NE, NW, SE, SW)
+function calculateNewValueNewtonsLaw(k, value, N, S, E, W, NE, NW, SE, SW, x, y, frameCount)
 {
+
+	if(frameCount<2)
+	{
+			if((x === 1 && y===6) || (x === 1 && y===7) || (x ===1 && y===8 ) || (x===7 && y===1) || (x===8 && y===1)){
+			return 0;
+		}
+		else if((x === 8 && y===rows - 2) || (x === 9 && y===rows-2)){
+			return 1;
+		}
+	}
+
 	var ans = (1 - 8*k)*value + k*(N + S + E + W + NE + NW + SE + SW);
 	return ans;
 }

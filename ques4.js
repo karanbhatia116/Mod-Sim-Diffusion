@@ -17,19 +17,24 @@ var middle = [];
 let chartLink;
 let dropDownText;
 var end = [];
-var isGreaterThan001 = false;
-var printed = false;
-var x, y;
-
+let maxTemp = 100; //100 •C
+let boundaryTemperature = 25; 
 capturer = new CCapture({
     format: "webm",
-    framerate: 100,
+    framerate: 24,
     name: "movie",
   });
 let p5Canvas;
 
-boundaryTemp = 0.5 // (1-boundaryTemp)*50 gives the actual value of temp
-intermediateTemp = 0.4 // (1 - intermediateTemp)*50 gives actual value
+boundaryTemp = 1 - boundaryTemperature/maxTemp; // (1-boundaryTemp)*maxTemp gives the actual value of temp
+intermediateTemp = 1 - maxTemp/maxTemp;// (1 - intermediateTemp)*maxTemp gives actual value
+
+if(maxTemp < boundaryTemperature){
+	intermediateTemp = 1;
+	boundaryTemp = 1 - boundaryTemp;
+}
+
+
 w = 20; //width of each cell
 h = 20; //height of each cell
 k = 0.03 //diffusion rate or thermal diffusivity
@@ -64,7 +69,7 @@ function setAbsorbingBoundary(grid, next, boundaryTemp){
 	}
 	//creating a new p tag to display temp
 	tempTxt = document.createElement("p");
-	tempTxt.innerHTML = "Boundary temperature: " + ((1 - boundaryTemp)*50).toString() + " C";
+	tempTxt.innerHTML = "Boundary temperature: " + (boundaryTemperature.toString()) + " C";
 	document.body.appendChild(tempTxt);
 	tempTxt.style = "font-size: 18px; margin-left: 26%";
 
@@ -202,32 +207,32 @@ function start(){
 	}
 
 	//defining hot zones
-	grid[1][8].value = 0;
-	grid[1][9].value = 0;
-	grid[1][10].value = 0;
-	grid[1][11].value = 0;
-	grid[20][1].value = 0;
-	grid[21][1].value = 0;
-	grid[22][1].value = 0;
+	grid[1][8].value = intermediateTemp;
+	grid[1][9].value = intermediateTemp;
+	grid[1][10].value = intermediateTemp;
+	grid[1][11].value = intermediateTemp;
+	grid[20][1].value = intermediateTemp;
+	grid[21][1].value = intermediateTemp;
+	grid[22][1].value = intermediateTemp;
 
 
-	next[1][8].value = 0;
-	next[1][9].value = 0;
-	next[1][10].value = 0;
-	next[1][11].value = 0;
-	next[20][1].value = 0;
-	next[21][1].value = 0;
-	next[22][1].value = 0;
+	next[1][8].value = intermediateTemp;
+	next[1][9].value = intermediateTemp;
+	next[1][10].value = intermediateTemp;
+	next[1][11].value = intermediateTemp;
+	next[20][1].value = intermediateTemp;
+	next[21][1].value = intermediateTemp;
+	next[22][1].value = intermediateTemp;
 
 
 	//defining cold zones
-	grid[10][rows-2].value = 1;
-	grid[11][rows-2].value = 1;
-	grid[12][rows-2].value = 1;
+	grid[10][rows-2].value = intermediateTemp;
+	grid[11][rows-2].value = intermediateTemp;
+	grid[12][rows-2].value = intermediateTemp;
 
-	next[10][rows-2].value = 1;
-	next[11][rows-2].value = 1;
-	next[12][rows-2].value = 1;
+	next[10][rows-2].value = intermediateTemp;
+	next[11][rows-2].value = intermediateTemp;
+	next[12][rows-2].value = intermediateTemp;
 
 }
 // Main function
@@ -278,7 +283,7 @@ function setup(){
 	grid, next = setAbsorbingBoundary(grid, next, boundaryTemp);
 
 	//setting the frame rate
-	frameRate(100);
+	frameRate(24);
 
 	// creating button to start and stop animation
 	btn = document.createElement("button");
@@ -322,53 +327,21 @@ function draw(){
 
 	if(frameCount !== 1 && isNewton)
 	{
+			middle.push((1 - next[cols/2][rows/2].getValue())*maxTemp);
+			end.push((1 - next[1][1].getValue())*maxTemp);
+			// //applying constant hot zone
+			// next[1][8].value = 0;
+			// next[1][9].value = 0;
+			// next[1][10].value = 0;
+			// next[1][11].value = 0;
+			// next[20][1].value = 0;
+			// next[21][1].value = 0;
+			// next[22][1].value = 0;
 
-			if(frameCount>2)
-			{
-					for(x = 1; x < cols - 1; x++){
-					for(y = 1; y < rows - 1; y++){
-						if(abs (next[x][y].getValue() - grid[x][y].getValue()) > 0.1009){
-							isGreaterThan001 = true;
-							break;
-						}
-					}
-					if(isGreaterThan001)
-					break;
-					}
-
-				if(!isGreaterThan001 && !printed){
-					console.log(`Reached equilibrium at ${frameCount}`);
-					printed = true;
-				}
-			}
-
-
-			middle.push((1 - next[cols/2][rows/2].getValue())*50);
-			end.push((1 - next[1][1].getValue())*50);
-
-			for(x = 0; x < cols ; x++){
-				for(y = 0; y < rows; y++){
-					grid[x][y].value = next[x][y].value;
-				}
-			}
-
-			if(frameCount<10)
-			{
-				//applying constant hot zone
-				next[1][8].value = 0;
-				next[1][9].value = 0;
-				next[1][10].value = 0;
-				next[1][11].value = 0;
-				next[20][1].value = 0;
-				next[21][1].value = 0;
-				next[22][1].value = 0;
-
-				//applying constant cold zone
-				next[10][rows-2].value = 1;
-				next[11][rows-2].value = 1;
-				next[12][rows-2].value = 1;
-			}
-
+			// //applying constant cold zone
+			// next[10][rows-2].value = 0;
+			// next[11][rows-2].value = 0;
+			// next[12][rows-2].value = 0;
 
 		for(var x = 1; x<cols - 1;x++)
 		{
@@ -389,9 +362,21 @@ function draw(){
 
 	else if(frameCount !== 1 && !isNewton)
 	{
-			middle.push((1 - next[cols/2][rows/2].getValue())*50);
-			end.push((1 - next[1][1].getValue())*50);
+			middle.push((1 - next[cols/2][rows/2].getValue())*maxTemp + 50);
+			end.push((1 - next[1][1].getValue())*maxTemp + 50);
+			// //applying constant heat
+			// next[1][8].value = 0;
+			// next[1][9].value = 0;
+			// next[1][10].value = 0;
+			// next[1][11].value = 0;
+			// next[20][1].value = 0;
+			// next[21][1].value = 0;
+			// next[22][1].value = 0;
 
+			// //applying constant cold zone
+			// next[10][rows-2].value = 0;
+			// next[11][rows-2].value = 0;
+			// next[12][rows-2].value = 0;
 		prev = next[cols/2][rows/2].getValue();
 		for(var x = 1; x<cols - 1;x++)
 		{
@@ -405,7 +390,7 @@ function draw(){
 				SE = next[x + 1][y + 1].getValue();
 				SW = next[x - 1][y + 1].getValue();
 				value = next[x][y].getValue();
-				next[x][y].setValue(calculateNewValueUsingFilter(value, N, S, E, W, NE, NW, SE, SW, x, y));
+				next[x][y].setValue(calculateNewValueUsingFilter(value, N, S, E, W, NE, NW, SE, SW));
 			}
 		}
 	}	
@@ -421,17 +406,15 @@ function draw(){
 	if (capturer) {
 	capturer.capture(p5Canvas.canvas);
 	}
-
-
 	if(frameCount=== 300){
-		// noLoop();
+		noLoop();
 		btn.textContent="Start Animation";
 		capturer.stop();
 		localStorage.setItem("middle", JSON.stringify(middle));
 		localStorage.setItem("end", JSON.stringify(end));
 		localStorage.setItem('boundaryType', JSON.stringify(boundaryType));
 
-		alert('Chart is generated. Click the link at the bottom or wait till equilibrium.');
+		alert('Chart is generated. Click the link at the bottom.');
 		chartLink = document.createElement('a');
 		chartLink.href = 'chart.html';
 		chartLink.innerText = 'Checkout chart';
@@ -439,9 +422,9 @@ function draw(){
 		document.body.appendChild(chartLink);
 		// capturer.save();
 	}
-	// if(frameCount> 300){
-	// 	resetSketch();
-	// }
+	if(frameCount> 300){
+		resetSketch();
+	}
 }
 
 
@@ -451,14 +434,8 @@ function calculateNewValueNewtonsLaw(k, value, N, S, E, W, NE, NW, SE, SW)
 	return ans;
 }
 
-function calculateNewValueUsingFilter(value, N, S, E, W, NE, NW, SE, SW, x, y){
+function calculateNewValueUsingFilter(value, N, S, E, W, NE, NW, SE, SW){
 
-	if((x === 1 && y === 8) || (x === 1 && y === 9) || (x === 1 && y === 10) || (x === 1 && y === 11) || (x === 20 && y === 1) || (x === 21 && y === 1) || (x === 22 && y === 1)){
-		return 0;
-	}
-	if((x === 10 && y === rows - 2) || (x === 11 && y === rows - 2) || (x === 12 && y === rows-2)){
-		return 1;
-	}
 	var ans = 0.25*value + 0.125*(N + E + S + W) + 0.0625*(NE + NW + SE + SW);
 	return ans;
 }
